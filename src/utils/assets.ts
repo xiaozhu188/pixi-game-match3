@@ -85,7 +85,7 @@ export async function initAssets() {
     });
 
     // Load assets for the load screen
-    await loadBundles(['preload', 'game', 'common']);
+    await loadBundles(['preload']);
 
     // List all existing bundles names
     const allBundles = assetsManifest.bundles.map((item) => item.name);
