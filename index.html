@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>游戏-消除3</title>
+    <style>
+      html,
+      body {
+        overflow: hidden !important;
+        height: 100% !important;
+        margin: 0;
+        padding: 0;
+        background-color: #fff;
+        position: fixed;
+      }
+      body::after {
+        content: "";
+        position: fixed;
+        z-index: 1000;
+        top: 50%;
+        left: 50%;
+        width: 70px;
+        height: 70px;
+        margin: -35px 0 0 -35px;
+        pointer-events: none;
+        border: 5px solid rgba(250, 204, 21, 0.5);
+        border-right-color: rgb(250, 204, 21);
+        border-radius: 50%;
+        transition: opacity 0.3s;
+        animation: rotateCircle 0.7s linear infinite forwards;
+      }
+
+      @keyframes rotateCircle {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      body.loaded::after {
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="./src/main.ts" type="module"></script>
+  </body>
+</html>

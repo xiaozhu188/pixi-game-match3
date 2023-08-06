@@ -1,0 +1,7 @@
+node_modules
+public
+tag.sh
+.DS_Store
+.assetpack
+.vscode
+dist
