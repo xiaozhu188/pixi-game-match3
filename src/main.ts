@@ -7,6 +7,7 @@ import { TiledBackground } from "./ui/Background";
 import { HomeScreen } from "./screens/HomeScreen";
 import { GameScreen } from "./screens/GameScreen";
 import { getUrlParam } from "./utils/getUrlParams";
+import { ResultScreen } from "./screens/ResultScreen";
 
 function resize() {
     const windowWidth = window.innerWidth;
@@ -55,6 +56,8 @@ async function init() {
     // Go to one of the screens if a shortcut is present in url params, otherwise go to home screen
     if (getUrlParam('game') !== null) {
         await navigation.showScreen(GameScreen);
+    } else if (getUrlParam('result') !== null) {
+        await navigation.showScreen(ResultScreen);
     } else {
         await navigation.showScreen(HomeScreen);
     }
