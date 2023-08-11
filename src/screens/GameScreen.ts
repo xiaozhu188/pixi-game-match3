@@ -110,7 +110,9 @@ export class GameScreen extends Container {
     /** Update the screen */
     public update() {
         this.match3.update(app.ticker.deltaMS)
+        // while remaining time < 10s, show countdown flash animation
         this.timer.updateTime(this.match3.timer.getTimeRemaining());
+        // while remaining time <= 5, show number scale animation
         this.overtime.updateTime(this.match3.timer.getTimeRemaining());
     }
     async show() {

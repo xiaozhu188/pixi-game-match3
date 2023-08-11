@@ -7,6 +7,9 @@ export type Match3Grid = Match3Type[][];
 /** Pair of row & column representing grid coordinates */
 export type Match3Position = { row: number; column: number };
 
+/** Orientation for match checks */
+export type Match3Orientation = 'horizontal' | 'vertical';
+
 /**
  * Create a 2D grid matrix filled up with given types
  * Example:
@@ -115,4 +118,170 @@ export function match3GridToString(grid: Match3Grid) {
         lines.push('|' + list.join('|') + '|');
     }
     return lines.join('\n');
+}
+
+/**
+ * Retrieve the piece type from a grid, by position
+ * @param grid The grid to be looked up
+ * @param position The position in the grid
+ * @returns The piece type from given position, undefined if position is invalid
+ */
+export function match3GetPieceType(grid: Match3Grid, position: Match3Position) {
+    return grid?.[position.row]?.[position.column];
+}
+
+/**
+ * Create a copy of provided grid
+ * @param grid The grid to be cloned
+ * @returns A copy of the original grid
+ */
+export function match3CloneGrid(grid: Match3Grid) {
+    const clone: Match3Grid = [];
+    for (const row of grid) {
+        clone.push(row.slice());
+    }
+    return clone;
+}
+
+/**
+ * Swap two pieces in the grid, based on their positions
+ * @param grid The grid to be changed
+ * @param positionA The first piece to swap
+ * @param positionB The second piece to swap
+ */
+export function match3SwapTypeInGrid(
+    grid: Match3Grid,
+    positionA: Match3Position,
+    positionB: Match3Position,
+) {
+    const typeA = match3GetPieceType(grid, positionA);
+    const typeB = match3GetPieceType(grid, positionB);
+
+    // Only swap pieces if both types are valid (not undefined)
+    if (typeA !== undefined && typeB !== undefined) {
+        match3SetPieceType(grid, positionA, typeB);
+        match3SetPieceType(grid, positionB, typeA);
+    }
+}
+
+/**
+ * Set the piece type in the grid, by position
+ * @param grid The grid to be changed
+ * @param position The position to be changed
+ * @param type The new type for given position
+ */
+export function match3SetPieceType(grid: Match3Grid, position: Match3Position, type: number) {
+    grid[position.row][position.column] = type;
+}
+
+/**
+ * Get all matches in the grid, optionally filtering results that involves given positions
+ * Example:
+ * [
+ *  [{row: 1, column: 1}, {row: 1, column: 2}, {row: 1, column: 3}]
+ *  [{row: 1, column: 1}, {row: 2, column: 1}, {row: 3, column: 1}]
+ * ]
+ * @param grid The grid to be analysed
+ * @param filter Optional list of positions that every match should have
+ * @param matchSize The length of the match, defaults to 3
+ * @returns A list of positions grouped by match, excluding ones not involving filter positions if provided
+ */
+export function match3GetMatches(grid: Match3Grid, filter?: Match3Position[], matchSize = 3) {
+    const allMatches = [
+        ...match3GetMatchesByOrientation(grid, matchSize, 'horizontal'),
+        ...match3GetMatchesByOrientation(grid, matchSize, 'vertical'),
+    ];
+
+    if (!filter) {
+        // Return all matches found if filter is not provided
+        return allMatches;
+    }
+
+    // List of matches that involves positions in the provided filter
+    const filteredMatches: Match3Position[][] = [];
+
+    for (const match of allMatches) {
+        let valid = false;
+        for (const position of match) {
+            // Compare each position of the match to see if includes one of the filter positions
+            for (const filterPosition of filter) {
+                const same = match3ComparePositions(position, filterPosition);
+                if (same) valid = true;
+            }
+        }
+
+        if (valid) {
+            // If match is valid (contains one of the filter positions), append that to the filtered list
+            filteredMatches.push(match);
+        }
+    }
+
+    return filteredMatches;
+}
+
+/**
+ * Retrieve a list of matches found in a singe orientation (horizontal or vertical)
+ * @param grid The grid to be searched
+ * @param matchSize The size of the match (usually 3)
+ * @param orientation If the search is horizontal or vertical
+ * @returns
+ */
+function match3GetMatchesByOrientation(
+    grid: Match3Grid,
+    matchSize: number,
+    orientation: Match3Orientation,
+) {
+    const matches: Match3Position[][] = [];
+    const rows = grid.length;
+    const columns = grid[0].length;
+    let lastType: undefined | number = undefined;
+    let currentMatch: Match3Position[] = [];
+
+    // Define primary and secondary orientations for the loop
+    const primary = orientation === 'horizontal' ? rows : columns;
+    const secondary = orientation === 'horizontal' ? columns : rows;
+
+    for (let p = 0; p < primary; p++) {
+        for (let s = 0; s < secondary; s++) {
+            // On horizontal 'p' is row and 's' is column, vertical is opposite
+            const row = orientation === 'horizontal' ? p : s;
+            const column = orientation === 'horizontal' ? s : p;
+            const type = grid[row][column];
+
+            if (type && type === lastType) {
+                // Type is the same as the last type, append to the match list
+                currentMatch.push({ row, column });
+            } else {
+                // Type is different from last - check current match length and append it to the results if suitable
+                if (currentMatch.length >= matchSize) {
+                    matches.push(currentMatch);
+                }
+                // Start a new match
+                currentMatch = [{ row, column }];
+                // Save last type to check in the next pass
+                lastType = type;
+            }
+        }
+
+        // Row (or column) finished. Append current match if suitable
+        if (currentMatch.length >= matchSize) {
+            matches.push(currentMatch);
+        }
+
+        // Cleanup before mmoving to the next row (or column)
+        lastType = undefined;
+        currentMatch = [];
+    }
+
+    return matches;
+}
+
+/**
+ * Check if two positions are the same
+ * @param a First position to compare
+ * @param b Second position to compare
+ * @returns True if position A row & column are the same of position B
+ */
+export function match3ComparePositions(a: Match3Position, b: Match3Position) {
+    return a.row === b.row && a.column == b.column;
 }

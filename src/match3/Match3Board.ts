@@ -1,7 +1,7 @@
 import { Container, Graphics } from "pixi.js";
 import { Match3 } from "./Match3";
 import { Match3Config, match3GetBlocks } from "./Match3Config";
-import { Match3Grid, Match3Position, Match3Type, match3CreateGrid, match3ForEach, match3GridToString } from "./Match3Utility";
+import { Match3Grid, Match3Position, Match3Type, match3CreateGrid, match3ForEach, match3GetPieceType, match3GridToString } from "./Match3Utility";
 import { pool } from "../utils/pool";
 import { Match3Piece } from "./Match3Piece";
 
@@ -89,7 +89,7 @@ export class Match3Board {
         const name = this.typesMap[pieceType];
         const piece = pool.get(Match3Piece);
         const viewPosition = this.getViewPositionByGridPosition(position);
-        // piece.onMove = (from, to) => this.match3.actions.actionMove(from, to);
+        piece.onMove = (from, to) => this.match3.actions.actionMove(from, to);
         // piece.onTap = (position) => this.match3.actions.actionTap(position);
         piece.setup({
             name,
@@ -116,5 +116,30 @@ export class Match3Board {
         const x = position.column * this.tileSize - offsetX;
         const y = position.row * this.tileSize - offsetY;
         return { x, y };
+    }
+    /**
+     * Find a piece sprite by grid position
+     * @param position The grid position to look for
+     * @returns
+     */
+    public getPieceByPosition(position: Match3Position) {
+        for (const piece of this.pieces) {
+            if (piece.row === position.row && piece.column === position.column) {
+                return piece;
+            }
+        }
+        return null;
+    }
+    /**
+     * Find out the piece type in a grid position
+     * @param position
+     * @returns The type of the piece
+     */
+    public getTypeByPosition(position: Match3Position) {
+        return match3GetPieceType(this.grid, position);
+    }
+    /** Bring a piece in front of all others */
+    public bringToFront(piece: Match3Piece) {
+        this.piecesContainer.addChild(piece);
     }
 }

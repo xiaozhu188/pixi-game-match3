@@ -2,6 +2,7 @@ import { Container } from 'pixi.js';
 import { Match3Config, match3GetConfig } from './Match3Config';
 import { Match3Timer } from './Match3Timer';
 import { Match3Board } from './Match3Board';
+import { Match3Actions } from './Match3Actions';
 
 /**
  * The main match3 class that sets up game's sub-systems and provide some useful callbacks.
@@ -16,6 +17,8 @@ export class Match3 extends Container {
     public onTimesUp?: () => void;
     /** Holds the grid state and display */
     public board: Match3Board;
+    /** Sort out actions that the player can take */
+    public actions: Match3Actions;
 
     constructor() {
         super();
@@ -24,6 +27,7 @@ export class Match3 extends Container {
         this.config = match3GetConfig();
         this.timer = new Match3Timer(this); // 计时模块
         this.board = new Match3Board(this); // 棋盘模块
+        this.actions = new Match3Actions(this); // 玩家操作（移动,点击）模块
     }
 
     /**
