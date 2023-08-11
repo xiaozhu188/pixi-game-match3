@@ -6,8 +6,8 @@
   "scripts": {
     "assetpack": "assetpack",
     "start": "vite",
-    "preview": "preview",
-    "build": "build"
+    "preview": "vite preview",
+    "build": "vite build"
   },
   "keywords": [],
   "author": "",

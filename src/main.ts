@@ -1,10 +1,12 @@
 import "pixi-spine";
 import { app } from "./app";
-import { sound } from "@pixi/sound";
 import { initAssets } from "./utils/assets";
 import { navigation } from "./utils/navigation";
 import { LoadScreen } from "./screens/LoadScreen";
 import { TiledBackground } from "./ui/Background";
+import { HomeScreen } from "./screens/HomeScreen";
+import { GameScreen } from "./screens/GameScreen";
+import { getUrlParam } from "./utils/getUrlParams";
 
 function resize() {
     const windowWidth = window.innerWidth;
@@ -31,9 +33,6 @@ function resize() {
 }
 
 async function init() {
-    // init sound temporarily to remove warnning
-    sound.init();
-
     // add canvas element to body
     document.body.append(app.view);
 
@@ -53,8 +52,12 @@ async function init() {
     // Show initial loading screen
     await navigation.showScreen(LoadScreen);
 
-    // go to game screen
-    // navigation.showScreen(Gamecreen);
+    // Go to one of the screens if a shortcut is present in url params, otherwise go to home screen
+    if (getUrlParam('game') !== null) {
+        await navigation.showScreen(GameScreen);
+    } else {
+        await navigation.showScreen(HomeScreen);
+    }
 }
 
 init();

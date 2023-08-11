@@ -80,7 +80,7 @@ export async function initAssets() {
         manifest: assetsManifest,
         basePath: 'assets',
         texturePreference: {
-            resolution: 0.5
+            resolution: 1
         }
     });
 

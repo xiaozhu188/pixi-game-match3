@@ -7,6 +7,6 @@ Text.defaultAutoResolution = false;
 export const app = new Application<HTMLCanvasElement>({
     backgroundColor: 0xffffff,
     backgroundAlpha: 0,
-    resolution: window.devicePixelRatio || 1,
+    resolution: 2
 })
 isDev() && (globalThis.__PIXI_APP__ = app);
