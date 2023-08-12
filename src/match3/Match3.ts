@@ -3,6 +3,42 @@ import { Match3Config, match3GetConfig } from './Match3Config';
 import { Match3Timer } from './Match3Timer';
 import { Match3Board } from './Match3Board';
 import { Match3Actions } from './Match3Actions';
+import { Match3Process } from './Match3Process';
+import { Match3Position, Match3Type } from './Match3Utility';
+import { Match3Piece } from './Match3Piece';
+import { Match3Stats } from './Match3Stats';
+
+/** Interface for onMove event data */
+export interface Match3OnMoveData {
+    /** The starting grid position of the move */
+    from: Match3Position;
+    /** The ending grid position of the move */
+    to: Match3Position;
+    /** True if is a valid movement (creates a match) */
+    valid: boolean;
+}
+
+/** Interface for onMatch event data */
+export interface Match3OnMatchData {
+    /** List of all matches detected in the grid */
+    matches: Match3Position[][];
+    /** Combo level - starting from 1 */
+    combo: number;
+}
+
+/** Interface for onPop event data */
+export interface Match3OnPopData {
+    /** The type of the piece popped out */
+    type: Match3Type;
+    /** The piece sprite */
+    piece: Match3Piece;
+    /** Current combo level */
+    combo: number;
+    /** Tells if the given type is a special type */
+    isSpecial: boolean;
+    /** True if the piece was popped from special effect, not plain match */
+    causedBySpecial: boolean;
+}
 
 /**
  * The main match3 class that sets up game's sub-systems and provide some useful callbacks.
@@ -19,6 +55,18 @@ export class Match3 extends Container {
     public board: Match3Board;
     /** Sort out actions that the player can take */
     public actions: Match3Actions;
+    /** Process matches and fills up the grid */
+    public process: Match3Process;
+    /** Fires when the game finishes auto-processing the grid */
+    public onProcessComplete?: () => void;
+    /** Fires when player move pieces */
+    public onMove?: (data: Match3OnMoveData) => void;
+    /** Fires when a match is detected */
+    public onMatch?: (data: Match3OnMatchData) => void;
+    /** Fires when a piece is popped out of the board */
+    public onPop?: (data: Match3OnPopData) => void;
+    /** Compute score, grade, number of matches */
+    public stats: Match3Stats;
 
     constructor() {
         super();
@@ -28,6 +76,8 @@ export class Match3 extends Container {
         this.timer = new Match3Timer(this); // 计时模块
         this.board = new Match3Board(this); // 棋盘模块
         this.actions = new Match3Actions(this); // 玩家操作（移动,点击）模块
+        this.process = new Match3Process(this);
+        this.stats = new Match3Stats(this);
     }
 
     /**

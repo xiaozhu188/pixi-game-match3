@@ -32,3 +32,41 @@ export async function resolveAndKillTweens(targets: gsap.TweenTarget) {
     }
     gsap.killTweensOf(targets);
 }
+
+/**
+ * Pause all tweens of a target
+ * @param targets Targets with tweens that should be paused
+ */
+export function pauseTweens(targets: gsap.TweenTarget) {
+    const tweens = gsap.getTweensOf(targets);
+    for (const tween of tweens) tween.pause();
+}
+
+/**
+ * Resume all tweens of a target
+ * @param targets Targets with tweens that should be resumed
+ */
+export function resumeTweens(targets: gsap.TweenTarget) {
+    const tweens = gsap.getTweensOf(targets);
+    for (const tween of tweens) tween.resume();
+}
+
+/**
+ * Reusable shake animation, usually for shokwave/earthquake effects
+ * @param target The objact to 'shake' its x and y
+ * @param power How strong/far is the random shake
+ * @param duration For how long it will be shaking
+ */
+export async function earthquake(target: { x: number; y: number }, power = 8, duration = 0.5) {
+    const shake = { power };
+    await gsap.to(shake, {
+        power: 0,
+        duration,
+        ease: 'linear',
+        onUpdate: () => {
+            if (!target) return;
+            target.x = randomRange(-shake.power, shake.power);
+            target.y = randomRange(-shake.power, shake.power);
+        },
+    });
+}

@@ -197,6 +197,8 @@ export function match3GetMatches(grid: Match3Grid, filter?: Match3Position[], ma
         return allMatches;
     }
 
+    // 如果提供了filter,match必须包含至少一个filter里的position.这应用在2个元素交换位置后，判断是否是有效移动的情境中.
+    // 判断有效移动查找的matches必须是由两个元素的位置引起的，因此这里的filter就是[from,to],即两个小球的位置
     // List of matches that involves positions in the provided filter
     const filteredMatches: Match3Position[][] = [];
 
@@ -268,7 +270,7 @@ function match3GetMatchesByOrientation(
             matches.push(currentMatch);
         }
 
-        // Cleanup before mmoving to the next row (or column)
+        // Cleanup before moving to the next row (or column)
         lastType = undefined;
         currentMatch = [];
     }
@@ -284,4 +286,140 @@ function match3GetMatchesByOrientation(
  */
 export function match3ComparePositions(a: Match3Position, b: Match3Position) {
     return a.row === b.row && a.column == b.column;
+}
+
+/**
+ * Move all pieces in the grid to their next empty position, vertically
+ * @param grid The grid to be changed
+ * @returns All positions that have been changed.
+ * Ex.: [[{row: 1, column: 1}, {row: 2, column: 1}]] - That piece moved 1 row down
+ */
+export function match3ApplyGravity(grid: Match3Grid) {
+    const rows = grid.length;
+    const columns = grid[0].length;
+    const changes: Match3Position[][] = [];
+    for (let r = rows - 1; r >= 0; r--) {
+        for (let c = 0; c < columns; c++) {
+            let position = { row: r, column: c };
+            let belowPosition = { row: r + 1, column: c };
+            let hasChanged = false;
+
+            // Skip this one if position below is out of bounds
+            if (!match3IsValidPosition(grid, belowPosition)) continue;
+
+            // Retrive the type of the position below
+            let belowType = match3GetPieceType(grid, belowPosition);
+            let currentType = match3GetPieceType(grid, position);
+
+            // Keep moving the piece down if position below is valid and empty
+            while (match3IsValidPosition(grid, belowPosition) && belowType === 0 && currentType !== 0) {
+                hasChanged = true;
+                match3SwapTypeInGrid(grid, position, belowPosition);
+                position = { ...belowPosition };
+                belowPosition.row += 1;
+                currentType = match3GetPieceType(grid, position);
+                belowType = match3GetPieceType(grid, belowPosition);
+            }
+
+            if (hasChanged) {
+                // Append a new change if position has changed [<from>, <to>]
+                changes.push([{ row: r, column: c }, position]);
+            }
+        }
+    }
+
+    return changes;
+}
+
+/**
+ * Check if a position is valid in the grid
+ * @param grid The grid in context
+ * @param position The position to be validated
+ * @returns True if position exists in the grid, false if out-of-bounds
+ */
+export function match3IsValidPosition(grid: Match3Grid, position: Match3Position) {
+    const rows = grid.length;
+    const cols = grid[0].length;
+    return (
+        position.row >= 0 && position.row < rows && position.column >= 0 && position.column < cols
+    );
+}
+
+
+/**
+ * 在网格中循环，并用随机的普通类型填充所有空位置
+ * Loop through the grid and fill up all empty positions with random types
+ * @param grid The grid to be changed
+ * @param types List of types available to randomise
+ * @returns A list with all positions that have their types changed from empty (0) to something
+ */
+export function match3FillUp(grid: Match3Grid, types: Match3Type[]) {
+    // Create a temp grid that will provide pieces to fill up corresponding slots
+    // using the same grid creation algorithm to avoid pre-made combinations
+    const tempGrid = match3CreateGrid(grid.length, grid[0].length, types);
+    
+    const rows = grid.length;
+    const columns = grid[0].length;
+    const emptyPositions: Match3Position[] = [];
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < columns; c++) {
+            if (!grid[r][c]) {
+                grid[r][c] = tempGrid[r][c];
+                emptyPositions.push({ row: r, column: c });
+            }
+        }
+    }
+
+    return emptyPositions;
+}
+
+/**
+ * Find out all empty spaces (type=0) in the grid
+ * @param grid The grid to be verified
+ * @returns A list of empty positions
+ */
+export function match3GetEmptyPositions(grid: Match3Grid) {
+    const positions: Match3Position[] = [];
+    const rows = grid.length;
+    const columns = grid[0].length;
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < columns; c++) {
+            if (!grid[r][c]) {
+                positions.push({ row: r, column: c });
+            }
+        }
+    }
+    return positions;
+}
+
+/**
+ * Check if list of positions includes given position
+ * @param positions List of positions to check
+ * @param position The position to be checked
+ * @returns True if position list contains the provided position, false otherwise
+ */
+export function match3IncludesPosition(positions: Match3Position[], position: Match3Position) {
+    for (const p of positions) {
+        if (match3ComparePositions(p, position)) return true;
+    }
+    return false;
+}
+
+/**
+ * Convert a grid position to string, useful for mapping values
+ * @param position The position to be stringified
+ * @returns A string representation of the position. Ex.: {row: 3, column: 1} => "3:1"
+ */
+export function match3PositionToString(position: Match3Position) {
+    return position.row + ':' + position.column;
+}
+
+/**
+ * Convert back a string to grid position
+ * @param str The string to be converted to a grid position
+ * @returns A position object. Ex.: "3:1" => {row: 3, column: 1}
+ */
+export function match3StringToPosition(str: string) {
+    const split = str.split(':');
+    return { row: Number(split[0]), column: Number(split[1]) };
 }

@@ -42,7 +42,7 @@ export class Match3Actions {
         // Execute the pieces swap - might be reverted if invalid
         await this.swapPieces(pieceA, pieceB);
         // start async queue
-        // this.match3.process.start();
+        this.match3.process.start();
     }
 
     /** Attempt to swap two pieces positions in the board, and revert the movement if disallowed */
@@ -58,6 +58,13 @@ export class Match3Actions {
 
         // Validate move if that creates any matches or if free moves is enabled
         const valid = this.validateMove(positionA, positionB);
+
+        // Fire the callback, even if the move is invalid
+        this.match3.onMove?.({ // effects?.onMove: play audio according to the value of valid
+            from: positionA,
+            to: positionB,
+            valid,
+        });
 
         if (valid) {
             // If move is valid, swap types in the grid and update view coordinates

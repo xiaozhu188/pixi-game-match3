@@ -1,7 +1,7 @@
 import { Container, Graphics } from "pixi.js";
 import { Match3 } from "./Match3";
 import { Match3Config, match3GetBlocks } from "./Match3Config";
-import { Match3Grid, Match3Position, Match3Type, match3CreateGrid, match3ForEach, match3GetPieceType, match3GridToString } from "./Match3Utility";
+import { Match3Grid, Match3Position, Match3Type, match3CreateGrid, match3ForEach, match3GetPieceType, match3GridToString, match3SetPieceType } from "./Match3Utility";
 import { pool } from "../utils/pool";
 import { Match3Piece } from "./Match3Piece";
 
@@ -48,7 +48,7 @@ export class Match3Board {
         // this.piecesContainer.visible = true;
 
         // The list of blocks (including specials) that will be used in the game
-        const blocks = match3GetBlocks(config.mode);       
+        const blocks = match3GetBlocks(config.mode);
 
         this.typesMap = {};
 
@@ -141,5 +141,54 @@ export class Match3Board {
     /** Bring a piece in front of all others */
     public bringToFront(piece: Match3Piece) {
         this.piecesContainer.addChild(piece);
+    }
+    /**
+     * Pop a piece out of the board, triggering its effects if it is a special piece
+     * @param position The grid position of the piece to be popped out
+     * @param causedBySpecial If the pop was caused by special effect
+     */
+    public async popPiece(position: Match3Position, causedBySpecial = false) {
+        const piece = this.getPieceByPosition(position);
+        const type = match3GetPieceType(this.grid, position);
+        // 如果当前位置没有piece或者类型是0,直接返回
+        if (!type || !piece) return;
+
+        // Set piece position in the grid to 0 and pop it out of the board
+        match3SetPieceType(this.grid, position, 0);
+
+        const popData = { piece, type, combo: 1, isSpecial: false, causedBySpecial };
+        this.match3.onPop?.(popData); // onPop中处理爆炸,飞出动效
+
+        if (this.pieces.includes(piece)) {
+            this.pieces.splice(this.pieces.indexOf(piece), 1);
+        }
+        await piece.animatePop();
+        this.disposePiece(piece);
+    }
+    /**
+     * Pop a list of pieces all together
+     * @param positions List of positions to be popped out
+     * @param causedBySpecial If this was caused by special effects
+     */
+    public async popPieces(positions: Match3Position[], causedBySpecial = false) {
+        // 简写: await Promise.all(positions.map(position => this.popPiece(position, causedBySpecial)))
+        const animPromises: Promise<void>[] = [];
+        for (const position of positions) {
+            animPromises.push(this.popPiece(position, causedBySpecial));
+        }
+        await Promise.all(animPromises);
+    }
+    /**
+     * Dispose a piece, removing it from the board
+     * @param piece Piece to be removed
+     */
+    public disposePiece(piece: Match3Piece) {
+        if (this.pieces.includes(piece)) {
+            this.pieces.splice(this.pieces.indexOf(piece), 1);
+        }
+        if (piece.parent) {
+            piece.parent.removeChild(piece);
+        }
+        pool.giveBack(piece);
     }
 }

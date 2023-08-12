@@ -8,11 +8,13 @@ import { Cauldron } from "../ui/Cauldron";
 import { GameTimer } from "../ui/GameTimer";
 import { GameCountdown } from "../ui/GameCountdown";
 import { GameOvertime } from "../ui/GameOvertime";
-import { Match3 } from "../match3/Match3";
+import { Match3, Match3OnMatchData, Match3OnMoveData, Match3OnPopData } from "../match3/Match3";
 import gsap from "gsap";
 import { GameTimesUp } from "../ui/GameTimesUp";
 import { navigation } from "../utils/navigation";
 import { ResultScreen } from "./ResultScreen";
+import { GameEffects } from "../match3/GameEffects";
+import { waitFor } from "../utils/asyncUtils";
 
 export class GameScreen extends Container {
     /** Assets bundles required by this screen */
@@ -26,6 +28,11 @@ export class GameScreen extends Container {
     public readonly overtime: GameOvertime;
     public readonly timesUp: GameTimesUp;
     public readonly match3: Match3;
+    /** Set to true when gameplay is finished */
+    private finished = false;
+    /** The special effects layer for the match3 */
+    public readonly effects?: GameEffects;
+
     constructor() {
         super();
 
@@ -59,8 +66,16 @@ export class GameScreen extends Container {
 
         // game core
         this.match3 = new Match3();
+        this.match3.onMove = this.onMove.bind(this);
+        this.match3.onMatch = this.onMatch.bind(this);
         this.match3.onTimesUp = this.onTimesUp.bind(this);
+        this.match3.onProcessComplete = this.onProcessComplete.bind(this);
+        this.match3.onPop = this.onPop.bind(this);
         this.gameContainer.addChild(this.match3);
+
+        // 游戏特效
+        this.effects = new GameEffects(this);
+        this.addChild(this.effects);
 
         // last 5 seconds
         this.overtime = new GameOvertime(this.match3);
@@ -125,13 +140,41 @@ export class GameScreen extends Container {
     }
     async hide() {
         this.overtime.hide();
+        await this.effects?.playGridExplosion();
+        await waitFor(0.3);
         await this.timesUp.playRevealAnimation();
         await this.timesUp.playExpandAnimation();
     }
     /** Fires when the game timer ends */
     private onTimesUp() {
         this.match3.stopPlaying();
+        // when process isProcessing, don't finish immediately.
+        // when process isComplete, trigger onProcessComplete and finish game if timer is not running. 
+        if (!this.match3.process.isProcessing()) this.finish();
+    }
+    /** Fires when the match3 grid finishes auto-processing */
+    private onProcessComplete() {
+        // Only finishes the game if timer already ended
+        if (!this.match3.timer.isRunning()) this.finish();
+    }
+    /** Finish the gameplay, save stats and go to the results */
+    private async finish() {
+        if (this.finished) return;
+        this.finished = true;
+        this.match3.stopPlaying();
         // will trigger hide and show this.timesUp
         navigation.showScreen(ResultScreen);
+    }
+    /** Fired when a piece is poped out fro the board */
+    private onPop(data: Match3OnPopData) {
+        this.effects?.onPop(data);
+    }
+    /** Fired when the player moves a piece */
+    private onMove(data: Match3OnMoveData) {
+        this.effects?.onMove(data);
+    }
+    /** Fired when match3 detects one or more matches in the grid */
+    private onMatch(data: Match3OnMatchData) {
+        this.effects?.onMatch(data);
     }
 }
