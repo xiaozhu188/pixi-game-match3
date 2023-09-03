@@ -5,7 +5,5 @@ export default defineConfig({
         port: 5000,
         open: true,
     },
-    build: {
-        assetsDir: "pixi-game-match3"
-    }
+    base: "pixi-game-match3",
 })
