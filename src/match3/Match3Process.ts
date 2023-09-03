@@ -1,4 +1,4 @@
-import { AsyncQueue } from "../utils/asyncUtils";
+import { AsyncQueue, waitFor } from "../utils/asyncUtils";
 import { Match3 } from "./Match3";
 import { match3ApplyGravity, match3FillUp, match3GetEmptyPositions, match3GetMatches, match3GetPieceType, match3GridToString } from "./Match3Utility";
 
@@ -44,12 +44,8 @@ export class Match3Process {
         });
 
         // Step #2 - Process and clear all special matches
-        // 如果匹配的长度大于3,根据特殊规则（详情见每个特殊piece的process函数）生成相应的特殊piece.
-        // 比如匹配到一行4个,那么就在中间位置(2)插入一个ColumnSpecial
-        // 如果一个match被匹配到一个特殊规则,该match的每个位置都会被pop(弹出),之后再通过match3GetMatches获取的matches不再包含该match了。
         this.queue.add(async () => {
-            // TODO 处理特殊piece
-            // await this.processSpecialMatches();
+            await this.processSpecialMatches();
         });
 
         // Step #3 - Process and clear remaining common matches
@@ -60,7 +56,7 @@ export class Match3Process {
         // Step #4 - Move down remaining pieces in the grid if there are empty spaces in their columns
         this.queue.add(async () => {
             // No await here, to make it run simultaneously with grid refill
-            this.applyGravity();
+            /* await */ this.applyGravity();
         });
 
         // Step #5 - Create new pieces that falls from the to to fill up remaining empty spaces
@@ -85,6 +81,11 @@ export class Match3Process {
     /** Get current process round */
     public getProcessRound() {
         return this.round;
+    }
+    /** Sort out special matches in the grid */
+    private async processSpecialMatches() {
+        console.log('[Match3] Process special matches');
+        await this.match3.special.process();
     }
     /** Clear all matches in the grid */
     private async processRegularMatches() {

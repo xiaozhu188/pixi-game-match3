@@ -7,6 +7,7 @@ import { Match3Process } from './Match3Process';
 import { Match3Position, Match3Type } from './Match3Utility';
 import { Match3Piece } from './Match3Piece';
 import { Match3Stats } from './Match3Stats';
+import { Match3Special } from './Match3Special';
 
 /** Interface for onMove event data */
 export interface Match3OnMoveData {
@@ -67,6 +68,8 @@ export class Match3 extends Container {
     public onPop?: (data: Match3OnPopData) => void;
     /** Compute score, grade, number of matches */
     public stats: Match3Stats;
+     /** Handles pieces with special powers */
+     public special: Match3Special;
 
     constructor() {
         super();
@@ -76,8 +79,9 @@ export class Match3 extends Container {
         this.timer = new Match3Timer(this); // 计时模块
         this.board = new Match3Board(this); // 棋盘模块
         this.actions = new Match3Actions(this); // 玩家操作（移动,点击）模块
-        this.process = new Match3Process(this);
-        this.stats = new Match3Stats(this);
+        this.process = new Match3Process(this); // 处理消除的过程
+        this.stats = new Match3Stats(this); // 游戏分数模块
+        this.special = new Match3Special(this); // 特殊元素
     }
 
     /**

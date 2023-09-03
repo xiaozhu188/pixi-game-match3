@@ -33,19 +33,19 @@ export class Match3Board {
         this.piecesContainer = new Container();
         this.match3.addChild(this.piecesContainer);
 
-        // this.piecesMask = new Graphics();
-        // this.piecesMask.beginFill(0xff0000, 1);
-        // this.piecesMask.drawRect(-2, -2, 4, 4);
-        // this.match3.addChild(this.piecesMask);
-        // this.piecesContainer.mask = this.piecesMask;
+        this.piecesMask = new Graphics();
+        this.piecesMask.beginFill(0xff0000, 1);
+        this.piecesMask.drawRect(-2, -2, 4, 4);
+        this.match3.addChild(this.piecesMask);
+        this.piecesContainer.mask = this.piecesMask;
     }
     setup(config: Match3Config) {
         this.rows = config.rows;
         this.columns = config.columns;
         this.tileSize = config.tileSize;
-        // this.piecesMask.width = this.getWidth();
-        // this.piecesMask.height = this.getHeight();
-        // this.piecesContainer.visible = true;
+        this.piecesMask.width = this.getWidth();
+        this.piecesMask.height = this.getHeight();
+        this.piecesContainer.visible = true;
 
         // The list of blocks (including specials) that will be used in the game
         const blocks = match3GetBlocks(config.mode);
@@ -57,7 +57,11 @@ export class Match3Board {
         for (let i = 0; i < blocks.length; i++) {
             const name = blocks[i];
             const type = i + 1; // leave 0 for empty
-            this.commonTypes.push(type);
+            if (this.match3.special.isSpecialAvailable(name)) {
+                this.match3.special.addSpecialHandler(name, type);
+            } else {
+                this.commonTypes.push(type);
+            }
             this.typesMap[type] = name;
         }
 
@@ -90,7 +94,7 @@ export class Match3Board {
         const piece = pool.get(Match3Piece);
         const viewPosition = this.getViewPositionByGridPosition(position);
         piece.onMove = (from, to) => this.match3.actions.actionMove(from, to);
-        // piece.onTap = (position) => this.match3.actions.actionTap(position);
+        piece.onTap = (position) => this.match3.actions.actionTap(position);
         piece.setup({
             name,
             type: pieceType,
@@ -152,11 +156,13 @@ export class Match3Board {
         const type = match3GetPieceType(this.grid, position);
         // 如果当前位置没有piece或者类型是0,直接返回
         if (!type || !piece) return;
+        const isSpecial = this.match3.special.isSpecial(type);
+        const combo = this.match3.process.getProcessRound();
 
         // Set piece position in the grid to 0 and pop it out of the board
         match3SetPieceType(this.grid, position, 0);
 
-        const popData = { piece, type, combo: 1, isSpecial: false, causedBySpecial };
+        const popData = { piece, type, combo, isSpecial, causedBySpecial };
         this.match3.onPop?.(popData); // onPop中处理爆炸,飞出动效
 
         if (this.pieces.includes(piece)) {
@@ -164,6 +170,9 @@ export class Match3Board {
         }
         await piece.animatePop();
         this.disposePiece(piece);
+
+        // Trigger any specials related to this piece, if there is any
+        await this.match3.special.trigger(type, position);
     }
     /**
      * Pop a list of pieces all together
@@ -190,5 +199,21 @@ export class Match3Board {
             piece.parent.removeChild(piece);
         }
         pool.giveBack(piece);
+    }
+    /**
+     * Spawn a new piece in the board, removing the piece in the same place, if there are any
+     * @param position The position where the piece should be spawned
+     * @param pieceType The type of the piece to be spawned
+     */
+    public async spawnPiece(position: Match3Position, pieceType: Match3Type) {
+        const oldPiece = this.getPieceByPosition(position);
+        if (oldPiece) {
+            console.log(`%c oldPiece:`, oldPiece, 'color: red');
+            this.disposePiece(oldPiece);
+        }
+        match3SetPieceType(this.grid, position, pieceType);
+        if (!pieceType) return;
+        const piece = this.createPiece(position, pieceType);
+        await piece.animateSpawn();
     }
 }

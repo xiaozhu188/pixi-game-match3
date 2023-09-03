@@ -83,12 +83,12 @@ export class GameScreen extends Container {
     }
     prepare() {
         const match3Config = match3GetConfig({
-            rows: getUrlParamNumber('rows') ?? 5,
-            columns: getUrlParamNumber('columns') ?? 5,
+            rows: getUrlParamNumber('rows') ?? 8,
+            columns: getUrlParamNumber('columns') ?? 8,
             tileSize: getUrlParamNumber('tileSize') ?? 50,
             freeMoves: getUrlParam('freeMoves') !== null,
             duration: getUrlParamNumber('duration') ?? 60,
-            mode: (getUrlParam('mode') as Match3Mode) ?? 'normal',
+            mode: (getUrlParam('mode') as Match3Mode) ?? 'easy',
         });
         console.log(match3Config);
 
@@ -105,7 +105,7 @@ export class GameScreen extends Container {
         const centerY = height * 0.5;
 
         this.gameContainer.x = centerX;
-        this.gameContainer.y = centerY;
+        this.gameContainer.y = div + this.match3.board.getHeight() * 0.5 + 20;
 
         this.score.x = centerX;
         this.score.y = 20;
@@ -129,6 +129,8 @@ export class GameScreen extends Container {
         this.timer.updateTime(this.match3.timer.getTimeRemaining());
         // while remaining time <= 5, show number scale animation
         this.overtime.updateTime(this.match3.timer.getTimeRemaining());
+        // update score
+        this.score.setScore(this.match3.stats.getScore());
     }
     async show() {
         await gsap.to(this.gameContainer.pivot, { y: 0, duration: 0.5, ease: 'back.out' });

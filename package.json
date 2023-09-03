@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "assetpack": "assetpack && node postassetpack.js",
-    "start": "vite",
+    "dev": "vite",
     "preview": "vite preview",
     "build": "vite build"
   },

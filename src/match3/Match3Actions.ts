@@ -69,7 +69,7 @@ export class Match3Actions {
         if (valid) {
             // If move is valid, swap types in the grid and update view coordinates
             // 1.update grid
-            match3SwapTypeInGrid(this.match3.board.grid, positionA, positionB); 
+            match3SwapTypeInGrid(this.match3.board.grid, positionA, positionB);
             // 2.update position of pieces
             pieceA.row = positionB.row;
             pieceA.column = positionB.column;
@@ -93,6 +93,22 @@ export class Match3Actions {
                 pieceA.animateSwap(viewPositionA.x, viewPositionA.y),
                 pieceB.animateSwap(viewPositionB.x, viewPositionB.y),
             ]);
+        } else if (
+            this.match3.special.isSpecial(match3GetPieceType(this.match3.board.grid, positionA))
+            && this.match3.special.isSpecial(match3GetPieceType(this.match3.board.grid, positionB))
+        ) {
+            // Pop both if A and B are special
+            await this.match3.board.popPieces([positionA, positionB]);
+        } else if (
+            this.match3.special.isSpecial(match3GetPieceType(this.match3.board.grid, positionA))
+        ) {
+            // Pop piece A if is special
+            await this.match3.board.popPiece(positionA);
+        } else if (
+            this.match3.special.isSpecial(match3GetPieceType(this.match3.board.grid, positionB))
+        ) {
+            // Pop piece B if is special
+            await this.match3.board.popPiece(positionB);
         }
     }
     /** Check if a move from origin to destination is valid
@@ -105,6 +121,11 @@ export class Match3Actions {
 
         const typeOfFrom = match3GetPieceType(this.match3.board.grid, from);
         const typeOfTo = match3GetPieceType(this.match3.board.grid, to);
+        const specialFrom = this.match3.special.isSpecial(typeOfFrom);
+        const specialTo = this.match3.special.isSpecial(typeOfTo);
+
+        // Always allow move that either or both are special pieces
+        if (specialFrom || specialTo) return true;
 
         // Clone current grid so we can manipulate it safely
         const tempGrid = match3CloneGrid(this.match3.board.grid);
@@ -117,5 +138,22 @@ export class Match3Actions {
 
         // Only validate moves that creates new matches
         return newMatches.length >= 1;
+    }
+    /**
+     * Tap action only allowed for special pieces, triggering their effects in place
+     * @param position The grid position of the action
+     */
+    public async actionTap(position: Match3Position) {
+        if (!this.match3.isPlaying()) return;
+
+        // Check the piece and type in the touched grid position
+        const piece = this.match3.board.getPieceByPosition(position);
+        const type = this.match3.board.getTypeByPosition(position);
+        if (!piece || !this.match3.special.isSpecial(type) || piece.isLocked()) return;
+
+        // Execute the tap action, popping the piece out which will trigger its special effects
+        console.log('[Match3] ACTION! Tap:', position);
+        await this.match3.board.popPiece(piece);
+        this.match3.process.start();
     }
 }

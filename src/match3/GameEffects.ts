@@ -51,7 +51,7 @@ export class GameEffects extends Container {
         // 爆炸烟雾特效
         const position = this.toLocal(data.piece.getGlobalPosition());
         this.playPopExplosion(position);
-
+        
         if (data.isSpecial) {
             sfx.play('common/sfx-special.wav', { volume: 0.5 });
             earthquake(this.game.pivot, 15); // 晃动面板动画,数值越大晃动幅度越大
