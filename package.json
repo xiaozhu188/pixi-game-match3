@@ -7,7 +7,8 @@
     "assetpack": "assetpack && node postassetpack.js",
     "dev": "vite",
     "preview": "vite preview",
-    "build": "vite build"
+    "build": "vite build",
+    "deploy": " npm run assetpack && npm run build"
   },
   "keywords": [],
   "author": "",
