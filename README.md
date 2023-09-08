@@ -22,8 +22,23 @@ https://match3.zhuwenjin.top/ (完整版本)
 
 https://xiaozhu188.github.io/pixi-game-match3/ (当前版本)
 
+### 开发
+
+首先打包静态资源
+```sh
+pnpm run assetpack
+```
+启动开发环境
+```sh
+pnpm run dev
+```
+
 ### 部分界面预览
 
 <img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/819cad07e7bc41738e608ab044a0b720~tplv-k3u1fbpfcp-jj-mark:3024:0:0:0:q75.awebp" />
 
 <img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/fb85803ba23f426d92b2c311b411af55~tplv-k3u1fbpfcp-jj-mark:3024:0:0:0:q75.awebp" />
+
+## License
+
+[MIT](./LICENSE) License © 2023-PRESENT [xiaozhu188](https://github.com/xiaozhu188)
