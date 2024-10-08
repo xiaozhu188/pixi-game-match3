@@ -34,7 +34,7 @@ const blocks: Record<Match3Mode | 'special', string[]> = {
     /** Hard mode piece set */
     hard: ['piece-dragon', 'piece-frog', 'piece-newt', 'piece-snake', 'piece-spider', 'piece-yeti'],
     /** Special types that will be added to the game regardless the mode */
-    special: ['special-row', 'special-column', 'special-blast', 'special-colour'],
+    special: ['special-blast', 'special-row', 'special-column', 'special-colour'],
 };
 
 /** Match3 configuration */
